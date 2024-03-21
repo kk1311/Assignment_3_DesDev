@@ -1,0 +1,15 @@
+<div class="receipt">
+    <h1>Order Receipt</h1>
+    <table class="receipt-table">
+        <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Price</th>
+        </tr>
+        <%= productsList %>
+    </table>
+    <p>Subtotal: $<%= subtotal.toFixed(2) %></p>
+    <p>Tax (<%= province %>): <%= (taxRate * 100).toFixed(0) %>%: $<%= calculatedSalesTax.toFixed(2) %></p>
+    <p><strong>Total Amount with Tax: $<%= totalWithTax.toFixed(2) %></strong></p>
+    <a href="/">Place another order</a>
+</div>

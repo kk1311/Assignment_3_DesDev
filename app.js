@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const { body, validationResult } = require('express-validator');
 const products = require('./productData'); // Import product data module
+const ejs = require('ejs');
 const app = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -9,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const provinceTaxRates = {
     'ON': 0.13, // Ontario
-    'QC': 0.15, // Quebec
+    'QC': 0.14975, // Quebec
     'BC': 0.12 // British Columbia
 };
 
@@ -43,8 +44,11 @@ app.post('/order',
             return res.status(400).send('Minimum purchase should be $10 or more.');
         }
 
-        const receipt = generateReceipt(req.body, productsSelected, quantities, totalAmount, salesTax, totalWithTax);
-        res.send(receipt);
+        // Generate receipt here
+        const receiptHTML = generateReceipt(req.body, productsSelected, quantities, totalAmount, salesTax, totalWithTax);
+
+        // Send the rendered HTML as the response
+        res.send(receiptHTML);
     }
 );
 
@@ -92,32 +96,13 @@ function generateReceipt(formData, productsSelected, quantities, totalAmount, sa
 
     const calculatedSalesTax = totalAmount * taxRate; // Calculate sales tax based on total amount and tax rate
 
-    // Generate receipt HTML
-    const receipt = `
-        <html>
-        <head>
-            <title>Order Receipt</title>
-            <link rel="stylesheet" href="/css/style.css">
-        </head>
-        <body>
-            <div class="receipt">
-                <h1>Order Receipt</h1>
-                <table class="receipt-table">
-                    <tr>
-                        <th>Item</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
-                    </tr>
-                    ${productsList}
-                </table>
-                <p>Subtotal: $${subtotal.toFixed(2)}</p>
-                <p>Tax (${province}): ${(taxRate * 100).toFixed(0)}%: $${calculatedSalesTax.toFixed(2)}</p>
-                <p><strong>Total Amount with Tax: $${totalWithTax.toFixed(2)}</strong></p>
-                <a href="/">Place another order</a>
-            </div>
-        </body>
-        </html>
-    `;
-    return receipt;
+    // Render the EJS template with data
+    return ejs.renderFile(path.join(__dirname, 'views', 'receipt.ejs'), {
+        productsList: productsList,
+        subtotal: subtotal,
+        province: province,
+        taxRate: taxRate,
+        calculatedSalesTax: calculatedSalesTax,
+        totalWithTax: totalWithTax
+    });
 }
-
